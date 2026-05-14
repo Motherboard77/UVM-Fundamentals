@@ -1,0 +1,66 @@
+
+//UVM CODE
+//Test of user defined do_print & convert2string
+//do_print echoes in tabular format, convert2string in single line
+//to swtich between console printing methods, bit switch is randomized
+//a non-class data member randomized using the void`(std::randomize()) method
+
+`include "uvm_macros.svh"
+import uvm_pkg::*;
+
+class my_object extends uvm_object;
+  `uvm_object_utils(my_object)
+  
+  function new(string path = "MY_OBJECT");    
+    super.new(path);
+  endfunction
+  
+  //data members
+  rand logic [1:0] a;
+  rand logic [3:0] b;
+  rand logic [7:0] c;
+  
+  virtual function string convert2string();
+    string s = super.convert2string();
+    s = {s, $sformatf("a : %0d ",a)};
+    s = {s, $sformatf("b : %0d ",b)};
+    s = {s, $sformatf("c : %0d ",c)};
+    return s;
+  endfunction
+  
+  //using user-defined print method
+  virtual function void do_print(uvm_printer printer);
+    super.do_print(printer);
+    printer.print_field("a : ", a, $bits(a), UVM_DEC);    
+    printer.print_field("b : ", b, $bits(b), UVM_DEC);
+    printer.print_field("c : ", c, $bits(c), UVM_DEC);
+  endfunction
+
+endclass
+
+module tb;
+  my_object obj;    //instanc of class my_object
+  bit switch;
+  
+  initial begin
+    obj = my_object::type_id::create("obj");     //create the object
+    obj.randomize();							 //randomize the data members
+    
+    //randomize the switch object
+    // std::randomize() is used for randomizing non-class variables
+    void'(std::randomize(switch));     
+    $display("Switch value = %0b ",switch);
+    
+    if (switch) 
+      begin
+        obj.print();
+      end
+    else 
+      begin
+        $display("%0s ", obj.convert2string());
+      end
+    //obj.print();								 //call the core print function
+    
+  end
+  
+endmodule
